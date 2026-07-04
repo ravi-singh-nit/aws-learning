@@ -1,0 +1,29 @@
+name: Java CI with Maven
+
+# 1. Yeh pipeline kab chalegi?
+on:
+  push:
+    branches: [ "main" ] # Jab main branch par koi code merge hoga
+  pull_request:
+    branches: [ "main" ] # Sabse important: Jab bhi koi main branch ke liye Pull Request banayega
+
+jobs:
+  build:
+    runs-on: ubuntu-latest # GitHub ke server par Linux machine chalegi
+
+    steps:
+      # Step A: GitHub se aapka code is Linux machine par copy karna
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Step B: Java Setup karna
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17' # Agar aap Java 21 use kar rahe hain toh '21' likhein
+          distribution: 'temurin'
+          cache: 'maven' # Isse har baar dependencies download nahi karni padengi, build fast hoga
+
+      # Step C: Aapki command chalana!
+      - name: Build with Maven
+        run: mvn clean install
