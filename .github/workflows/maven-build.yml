@@ -28,8 +28,10 @@ jobs:
       - name: Build with Maven
         run: mvn clean package
 
-      - name: Rename JAR
-        run: mv target/*.jar target/app.jar
+      - name: Rename move JAR
+        run: |
+          rm -f /home/ec2-user/app/target/*.jar
+          mv /home/ec2-user/app/app.jar /home/ec2-user/app/
 
      #copy jar to ec2 instance
       - name: Copy JAR to EC2
