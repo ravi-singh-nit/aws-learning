@@ -37,3 +37,17 @@ jobs:
           key: ${{ secrets.EC2_KEY }}
           source: "target/*.jar"
           target: "/home/ec2-user/app/"
+
+     #kill already running ec2 java job and start the new one
+      - name: Deploy on EC2
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_KEY }}
+          script: |
+            echo "Stopping old app..."
+            pkill -f 'java -jar' || true
+              
+            echo "Starting new app..."
+            nohup java -jar /home/ec2-user/app/*.jar > app.log 2>&1 &
