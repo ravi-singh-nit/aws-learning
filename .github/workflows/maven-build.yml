@@ -1,79 +1,61 @@
-name: Build & Deploy Spring Boot
+name: Java CI with Maven
 
+# 1. Yeh pipeline kab chalegi?
 on:
   push:
-    branches:
-      - main
+    branches: [ "main" ] # Jab main branch par koi code merge hoga
+  pull_request:
+    branches: [ "main" ] # Sabse important: Jab bhi koi main branch ke liye Pull Request banayega
 
 jobs:
-  build-and-deploy:
-    runs-on: ubuntu-latest
+  build:
+    runs-on: ubuntu-latest # GitHub ke server par Linux machine chalegi
 
     steps:
-      # Checkout Code
-      - name: Checkout Code
+      # Step A: GitHub se aapka code is Linux machine par copy karna
+      - name: Checkout code
         uses: actions/checkout@v4
 
-      # Setup Java
+      # Step B: Java Setup karna
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
-          distribution: temurin
-          java-version: "17"
-          cache: maven
+          java-version: '17' # Agar aap Java 21 use kar rahe hain toh '21' likhein
+          distribution: 'temurin'
+          cache: 'maven' # Isse har baar dependencies download nahi karni padengi, build fast hoga
 
-      # Build Project
+      # Step C: Aapki command chalana!
       - name: Build with Maven
-        run: mvn clean package -DskipTests
+        run: mvn clean package
 
-      # Rename Jar
       - name: Rename JAR
+        run: mv target/*.jar target/app.jar
+      - name: Rename move JAR
         run: |
-          JAR_NAME=app_$(date +%Y%m%d_%H%M%S).jar
-          mv target/*.jar target/$JAR_NAME
-          echo "JAR_NAME=$JAR_NAME" >> $GITHUB_ENV
+          rm -f /home/ec2-user/app/target/*.jar
+          mv /home/ec2-user/app/app.jar /home/ec2-user/app/
 
-      # Copy Jar to EC2
+      #copy jar to ec2 instance
       - name: Copy JAR to EC2
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_KEY }}
-          source: "target/${{ env.JAR_NAME }}"
-          target: "/home/ec2-user/app"
+          source: "target/app.jar"
+          target: "/home/ec2-user/app/"
 
-      # Deploy
-      - name: Deploy to EC2
+      #kill already running ec2 java job and start the new one
+      - name: Deploy on EC2
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_KEY }}
           script: |
-            set -e
-
-            cd /home/ec2-user/app/target
-
-            echo "Stopping old application..."
-            pkill -f "java -jar" || true
-
-            sleep 2
-
-            echo "Finding latest jar..."
-            LATEST_JAR=$(ls -t app_*.jar | head -1)
-
-            echo "Latest Jar : $LATEST_JAR"
-
-            echo "Starting application..."
-            nohup java -jar "$LATEST_JAR" > app.log 2>&1 &
-
+            echo "Stopping old app..."
+            pkill -f 'java -jar' || true
+            
             sleep 5
-
-            echo "Running Java Process:"
-            ps -ef | grep java || true
-
-            echo "Cleaning old jars..."
-            ls -t app_*.jar | tail -n +3 | xargs -r rm -f
-
-            echo "Deployment Successful"
+            
+            echo "Starting new app..."
