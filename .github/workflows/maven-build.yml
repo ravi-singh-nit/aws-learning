@@ -51,6 +51,8 @@ jobs:
           script: |
             echo "Stopping old app..."
             pkill -f 'java -jar' || true
+            
+            sleep 5
               
             echo "Starting new app..."
             nohup java -jar /home/ec2-user/app/app.jar > app.log 2>&1 &
