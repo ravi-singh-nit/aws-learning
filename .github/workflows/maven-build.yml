@@ -50,4 +50,4 @@ jobs:
             pkill -f 'java -jar' || true
               
             echo "Starting new app..."
-            nohup java -jar /home/ec2-user/app/*.jar > app.log 2>&1 &
+            nohup java -jar /home/ec2-user/app/target/*.jar > app.log 2>&1 &
