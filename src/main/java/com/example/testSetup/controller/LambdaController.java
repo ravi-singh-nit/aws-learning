@@ -29,4 +29,11 @@ public class LambdaController {
         lambdaService.createLambdaClient();
         return "Lambda function created successfully";
     }
+
+    @PostMapping("/invoke")
+    public String invokeLambda(){
+        System.out.println("executing lambda from code");
+        lambdaService.executeLambda();
+        return "lambda execution completed";
+    }
 }
