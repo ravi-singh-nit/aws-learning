@@ -23,7 +23,7 @@ public class TestController {
         System.out.println("post is "+post);
 
       //        throw new RuntimeException("my exeprtion");
-        return "Hello Wrold";
+        return "Hello World + running latest build ";
     }
 
     @GetMapping("/test/{id}")

@@ -50,4 +50,17 @@ public class LambdaService {
         System.out.println("craete function responee "+ createFunctionResponse.functionArn());
         return true;
     }
+
+    public boolean executeLambda(){
+
+        InvokeRequest invokeRequest = InvokeRequest.builder()
+                .functionName("nomisoLamda") // Aapka lambda function name
+                .build();
+
+        InvokeResponse invokeResponse = lambdaClient.invoke(invokeRequest);
+        System.out.println("lambda invoke response is "+invokeResponse);
+        return true;
+
+
+    }
 }
