@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # Checkout source code
+      # Checkout Code
       - name: Checkout Code
         uses: actions/checkout@v4
 
@@ -19,10 +19,10 @@ jobs:
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: '17'
+          java-version: "17"
           cache: maven
 
-      # Build Application
+      # Build Project
       - name: Build with Maven
         run: mvn clean package -DskipTests
 
@@ -43,31 +43,37 @@ jobs:
           source: "target/${{ env.JAR_NAME }}"
           target: "/home/ec2-user/app"
 
-      # Deploy on EC2
-      - name: Deploy Application
+      # Deploy
+      - name: Deploy to EC2
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_KEY }}
           script: |
+            set -e
+
             cd /home/ec2-user/app/target
 
             echo "Stopping old application..."
-            pkill -f 'java -jar' || true
+            pkill -f "java -jar" || true
+
+            sleep 2
 
             echo "Finding latest jar..."
             LATEST_JAR=$(ls -t app_*.jar | head -1)
 
-            echo "Starting $LATEST_JAR ..."
+            echo "Latest Jar : $LATEST_JAR"
+
+            echo "Starting application..."
             nohup java -jar "$LATEST_JAR" > app.log 2>&1 &
 
             sleep 5
 
-            echo "Running Java Processes:"
-            ps -ef | grep java
+            echo "Running Java Process:"
+            ps -ef | grep java || true
 
-            echo "Keeping latest 2 jars..."
+            echo "Cleaning old jars..."
             ls -t app_*.jar | tail -n +3 | xargs -r rm -f
 
-            echo "Deployment Completed Successfully."
+            echo "Deployment Successful"
